@@ -13,7 +13,10 @@ class Triangulator:
         self.index_from_point = initial_shape.index_from_point
         self.depth = depth
         self.method = {"edge": self.subdivide_edge,
-                       "midpoint2": self.subdivide_midpoint2}[method]
+                       "midpoint2": self.subdivide_midpoint2,
+                       "midpoint": self.subdivide_midpoint,
+                       "centroid": self.subdivide_centroid
+                       }[method]
         self.graph = None
     
     def get_graph(self):
@@ -104,3 +107,48 @@ class Triangulator:
         # WRONG TRIANGULATION!
         yield from self.subdivide_midpoint2(Triangle(i0, i12, i1), depth-1)
         yield from self.subdivide_midpoint2(Triangle(i0, i2, i12), depth-1)
+
+    def subdivide_midpoint(self, tri, depth):
+        if depth == 0:
+            yield tri
+            return
+        #       p0
+        #      /|\
+        #     / | \
+        #    /  |  \
+        #   /___|___\
+        # p1   m12   p2
+        i0, i1, i2 = tri
+        m12 = normalize(midpoint(self.point_from_index[i1], self.point_from_index[i2]))
+        i12 = self.get_index_from_point(m12)
+        # WRONG TRIANGULATION!
+        yield from self.subdivide_midpoint2(Triangle(i12, i0, i1), depth-1)
+        yield from self.subdivide_midpoint2(Triangle(i12, i2, i0), depth-1)
+
+    def subdivide_centroid(self, tri, depth):
+        if depth == 0:
+            yield tri
+            return
+        #       p0
+        #       /|\
+        #      / | \
+        #     /  c  \
+        #    /_______\
+        #  p1         p2
+        i0, i1, i2 = tri
+        p0 = self.point_from_index[i0]
+        p1 = self.point_from_index[i1]
+        p2 = self.point_from_index[i2]
+        centroid = normalize(Point(
+            (p0.x + p1.x + p2.x) / 3,
+            (p0.y + p1.y + p2.y) / 3,
+            (p0.z + p1.z + p2.z) / 3,
+        ))
+        ic = self.get_index_from_point(centroid)
+        t1 = Triangle(i0, i1, ic)
+        t2 = Triangle(i2, ic, i0)
+        t3 = Triangle(ic, i1, i2)
+
+        yield from self.subdivide_centroid(t1, depth - 1)
+        yield from self.subdivide_centroid(t2, depth - 1)
+        yield from self.subdivide_centroid(t3, depth - 1)

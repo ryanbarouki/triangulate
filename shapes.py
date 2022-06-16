@@ -1,4 +1,4 @@
-from utils import Point, Triangle
+from utils import Point, Triangle, normalize
 
 p = 2**0.5 / 2
 
@@ -34,4 +34,27 @@ class Octahedron:
             Triangle(5, 3, 2),
             Triangle(5, 4, 3),
             Triangle(5, 1, 4),
+        ]
+
+class Tetrahedron:
+    def __init__(self) -> None:
+        self.index_from_point = {
+            normalize(Point(1, 0, -p)): 0,
+            normalize(Point(-1, 0, -p)): 1,
+            normalize(Point(0, 1, p)): 2,
+            normalize(Point(0, -1, p)): 3
+        }
+            
+        self.point_from_index = {
+            0: normalize(Point(1, 0, -p)),
+            1: normalize(Point(-1, 0, -p)),
+            2: normalize(Point(0, 1, p)),
+            3: normalize(Point(0, -1, p))
+        }
+
+        self.faces = [
+            Triangle(0, 1, 2),
+            Triangle(0, 2, 3),
+            Triangle(0, 3, 1),
+            Triangle(1, 3, 2),
         ]
