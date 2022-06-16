@@ -15,7 +15,10 @@ class Triangulator:
         self.method = {"edge": self.subdivide_edge,
                        "midpoint2": self.subdivide_midpoint2,
                        "midpoint": self.subdivide_midpoint,
-                       "centroid": self.subdivide_centroid
+                       "centroid": self.subdivide_centroid,
+                       "hybrid": self.subdivide_hybrid,
+                       "hybrid2": self.subdivide_hybrid2,
+                       "hybrid3": self.subdivide_hybrid3,
                        }[method]
         self.graph = None
     
@@ -152,3 +155,63 @@ class Triangulator:
         yield from self.subdivide_centroid(t1, depth - 1)
         yield from self.subdivide_centroid(t2, depth - 1)
         yield from self.subdivide_centroid(t3, depth - 1)
+
+    def subdivide_hybrid3(self, tri, depth):
+        def triangle(tri, depth):
+            if depth == 0:
+                yield tri
+                return
+            for t in self.subdivide_centroid(tri, 1):
+                yield from edge(t, depth - 1)
+
+        def centroid(tri, depth):
+            if depth == 0:
+                yield tri
+                return
+            for t in self.subdivide_midpoint(tri, 2):
+                yield from triangle(t, depth - 1)
+
+        def edge(tri, depth):
+            if depth == 0:
+                yield tri
+                return
+            for t in self.subdivide_edge(tri, 1):
+                yield from centroid(t, depth - 1)
+
+        return centroid(tri, depth)
+
+
+    def subdivide_hybrid2(self, tri, depth):
+        def centroid(tri, depth):
+            if depth == 0:
+                yield tri
+                return
+            for t in self.subdivide_centroid(tri, 1):
+                yield from edge(t, depth - 1)
+
+        def edge(tri, depth):
+            if depth == 0:
+                yield tri
+                return
+            for t in self.subdivide_edge(tri, 1):
+                yield from centroid(t, depth - 1)
+
+        return centroid(tri, depth)
+
+
+    def subdivide_hybrid(self, tri, depth):
+        def centroid(tri, depth):
+            if depth == 0:
+                yield tri
+                return
+            for t in self.subdivide_centroid(tri, 1):
+                yield from edge(t, depth - 1)
+
+        def edge(tri, depth):
+            if depth == 0:
+                yield tri
+                return
+            for t in self.subdivide_edge(tri, 1):
+                yield from centroid(t, depth - 1)
+
+        return edge(tri, depth)
