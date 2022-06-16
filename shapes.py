@@ -12,15 +12,8 @@ class Octahedron:
             Point(-p, 0, -p): 4,
             Point(0, -1, 0): 5
         }
-            
-        self.point_from_index = {
-            0: Point(0, 1, 0),
-            1: Point(-p, 0, p),
-            2: Point(p, 0, p),
-            3: Point(p, 0, -p),
-            4: Point(-p, 0, -p),
-            5: Point(0, -1, 0)
-        }
+
+        self.point_from_index = {v: k for k, v in self.index_from_point.items()}
 
         self.faces = [
             # top half
@@ -45,12 +38,7 @@ class Tetrahedron:
             normalize(Point(0, -1, p)): 3
         }
             
-        self.point_from_index = {
-            0: normalize(Point(1, 0, -p)),
-            1: normalize(Point(-1, 0, -p)),
-            2: normalize(Point(0, 1, p)),
-            3: normalize(Point(0, -1, p))
-        }
+        self.point_from_index = {v: k for k, v in self.index_from_point.items()}
 
         self.faces = [
             Triangle(0, 1, 2),
