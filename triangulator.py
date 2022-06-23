@@ -4,39 +4,58 @@ import matplotlib.pyplot as plt
 import matplotlib.tri as mtri
 from collections import namedtuple
 import trimesh as tri
+import random
 from utils import Point, Triangle, normalize, midpoint
 
 class Triangulator:
-    def __init__(self, initial_shape, depth, method) -> None:
-        self.initial_faces = initial_shape.faces
+    def __init__(self, initial_shape) -> None:
+        self.initial_faces = initial_shape.faces[:]
+        self.faces = []
         self.point_from_index = initial_shape.point_from_index
         self.index_from_point = initial_shape.index_from_point
-        self.depth = depth
-        self.method = {"edge": self.subdivide_edge,
+        self.methods = {"edge": self.subdivide_edge,
                        "midpoint2": self.subdivide_midpoint2,
                        "midpoint": self.subdivide_midpoint,
                        "centroid": self.subdivide_centroid,
                        "hybrid": self.subdivide_hybrid,
                        "hybrid2": self.subdivide_hybrid2,
                        "hybrid3": self.subdivide_hybrid3,
-                       }[method]
+                       }
         self.graph = None
+
+    def triangulate_with_recursive_method(self, depth, method):
+        for i, face in enumerate(self.subdivide(depth, self.methods[method])):
+            self.faces.append(face)
+        return self.get_current_graph()
     
-    def get_graph(self):
-        new_faces = []
-        for i, face in enumerate(self.subdivide(self.depth, self.method)):
-            new_faces.append(face)
-        mesh = tri.Trimesh(faces=new_faces)
+    def generate_random_triangluation(self, N):
+        self.faces.extend(self.initial_faces[:])
+        for i in range(N - len(self.point_from_index)):
+            random_face_id = random.randint(0, len(self.faces)-1)
+            random_face = self.faces.pop(random_face_id)
+            for j, new_faces in enumerate(self.subdivide_centroid(random_face, 1)):
+                self.faces.append(new_faces)
+        return self.get_current_graph()
+
+    def get_current_graph(self):
+        faces = self.faces
+        if self.faces == []:
+            faces = self.initial_faces
+        mesh = tri.Trimesh(faces=faces)
         graph = nx.Graph()
         graph.add_edges_from(mesh.edges)
-        return graph
+        return graph, mesh
     
     def draw(self):
         X = []
         Y = []
         Z = []
         T = []
-        for i, face in enumerate(self.subdivide(self.depth, self.method)):
+        faces = self.faces
+        if self.faces == []:
+            faces = self.initial_faces
+        for i in range(len(faces)):
+            face = faces[i]
             X.extend([self.point_from_index[p].x for p in face])
             Y.extend([self.point_from_index[p].y for p in face])
             Z.extend([self.point_from_index[p].z for p in face])
@@ -50,8 +69,6 @@ class Triangulator:
         ax  = fig.add_subplot(111, projection='3d')
         ax.plot_trisurf(T, Z, lw=0.2, edgecolor="black", color="grey", alpha=1, cmap='YlGnBu_r')
         plt.axis('off')
-        plt.show()
-        
 
     def get_index_from_point(self, point):
         if point in self.index_from_point:

@@ -1,4 +1,5 @@
 from utils import Point, Triangle, normalize
+import trimesh as tri
 
 p = 2**0.5 / 2
 
@@ -46,3 +47,10 @@ class Tetrahedron:
             Triangle(0, 3, 1),
             Triangle(1, 3, 2),
         ]
+
+class UVSphere:
+    def __init__(self, count=(32,32)) -> None:
+        uv_mesh = tri.creation.uv_sphere(count=count)
+        self.faces = [Triangle(*face) for face in uv_mesh.faces]
+        self.point_from_index = {i: Point(*uv_mesh.vertices[i]) for i in range(len(uv_mesh.vertices)) if uv_mesh.referenced_vertices[i]}
+        self.index_from_point = {Point(*uv_mesh.vertices[i]):i for i in range(len(uv_mesh.vertices)) if uv_mesh.referenced_vertices[i]}
