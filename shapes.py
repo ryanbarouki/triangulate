@@ -54,3 +54,10 @@ class UVSphere:
         self.faces = [Triangle(*face) for face in uv_mesh.faces]
         self.point_from_index = {i: Point(*uv_mesh.vertices[i]) for i in range(len(uv_mesh.vertices)) if uv_mesh.referenced_vertices[i]}
         self.index_from_point = {Point(*uv_mesh.vertices[i]):i for i in range(len(uv_mesh.vertices)) if uv_mesh.referenced_vertices[i]}
+
+class Icosphere:
+    def __init__(self, depth) -> None:
+        ico_mesh = tri.creation.icosphere(subdivisions=depth)
+        self.faces = [Triangle(*face) for face in ico_mesh.faces]
+        self.point_from_index = {i: Point(*ico_mesh.vertices[i]) for i in range(len(ico_mesh.vertices)) if ico_mesh.referenced_vertices[i]}
+        self.index_from_point = {Point(*ico_mesh.vertices[i]):i for i in range(len(ico_mesh.vertices)) if ico_mesh.referenced_vertices[i]}

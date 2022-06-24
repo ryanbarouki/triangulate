@@ -6,7 +6,7 @@ import scipy.sparse as scsp
 import scipy.linalg as sclin
 import trimesh as tri
 
-from shapes import Octahedron, Tetrahedron, UVSphere
+from shapes import Icosphere, Octahedron, Tetrahedron, UVSphere
 
 def euler_char(graph, mesh):
     V = graph.number_of_nodes()
@@ -45,17 +45,24 @@ print(f"Euler character: {euler_char(random_graph, random_mesh)}")
 random_tri.draw()
 
 edge_tri = Triangulator(Octahedron())
-edge_graph, edge_mesh = edge_tri.triangulate_with_recursive_method(depth=3, method="centroid")
+edge_graph, edge_mesh = edge_tri.triangulate_with_recursive_method(depth=3, method="edge")
 print(f"Euler character: {euler_char(edge_graph, edge_mesh)}")
 edge_tri.draw()
 
-uv_sphere = Triangulator(UVSphere(count=(15,10)))
+uv_sphere = Triangulator(UVSphere(count=(10,17)))
 uv_graph, uv_mesh = uv_sphere.get_current_graph()
 print(f"Euler character: {euler_char(uv_graph, uv_mesh)}")
 uv_sphere.draw()
+
+icosphere = Triangulator(Icosphere(depth=1))
+ico_graph, ico_mesh = icosphere.get_current_graph()
+print(f"Euler character: {euler_char(ico_graph, ico_mesh)}")
+icosphere.draw()
 
 print(f"Det random sphere:{det(M(nx.adjacency_matrix(random_graph)))}")
 print(f"Det edge sphere:{det(M(nx.adjacency_matrix(edge_graph)))}")
 print(f"Det UV sphere:{det(M(nx.adjacency_matrix(uv_graph)))}")
 
+# Stragegy: 
+# Make graphs of det vs N for all three types on triangulation and try to compare 
 plt.show()
