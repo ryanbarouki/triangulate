@@ -1,3 +1,6 @@
+import warnings
+warnings.simplefilter(action='ignore', category=FutureWarning)
+
 from triangulator import Triangulator
 import matplotlib.pyplot as plt
 import networkx as nx
@@ -37,32 +40,80 @@ def det(mat):
             zero = True
             continue
         det *= eig
+    if det.imag != 0:
+        raise Exception("Determinant is complex something is wrong!")
     return det
 
-random_tri = Triangulator(Octahedron())
-random_graph, random_mesh = random_tri.generate_random_triangluation(258)
-print(f"Euler character: {euler_char(random_graph, random_mesh)}")
-random_tri.draw()
+def main():
+    random_tri = Triangulator(Octahedron())
+    random_graph, random_mesh = random_tri.generate_random_triangluation(258)
+    print(f"Euler character: {euler_char(random_graph, random_mesh)}")
 
-edge_tri = Triangulator(Octahedron())
-edge_graph, edge_mesh = edge_tri.triangulate_with_recursive_method(depth=3, method="edge")
-print(f"Euler character: {euler_char(edge_graph, edge_mesh)}")
-edge_tri.draw()
+    icosphere = Triangulator(Icosphere(depth=1))
+    ico_graph, ico_mesh = icosphere.get_current_graph()
+    print(f"Euler character: {euler_char(ico_graph, ico_mesh)}")
 
-uv_sphere = Triangulator(UVSphere(count=(10,17)))
-uv_graph, uv_mesh = uv_sphere.get_current_graph()
-print(f"Euler character: {euler_char(uv_graph, uv_mesh)}")
-uv_sphere.draw()
+    # uv_sphere = Triangulator(UVSphere(count=(13,5)))
+    # uv_graph, uv_mesh = uv_sphere.get_current_graph()
+    # uv_sphere.draw()
+    # uv_sphere2 = Triangulator(UVSphere(count=(10,8)))
+    # uv_graph, uv_mesh = uv_sphere2.get_current_graph()
+    # uv_sphere2.draw()
+    # uv_sphere3 = Triangulator(UVSphere(count=(7,11)))
+    # uv_graph, uv_mesh = uv_sphere3.get_current_graph()
+    # uv_sphere3.draw()
+    # plt.show()
+    # Stragegy: 
+    # Make graphs of det vs N for all three types on triangulation and try to compare 
+    edge_det = []
+    for i in range(1,4):
+        edge_tri = Triangulator(Octahedron())
+        edge_graph, edge_mesh = edge_tri.triangulate_with_recursive_method(depth=i, method="edge")
+        # print(f"Euler character: {euler_char(edge_graph, edge_mesh)}")
+        determinant = det(M(nx.adjacency_matrix(edge_graph)))
+        edge_det.append([edge_graph.number_of_nodes(), determinant])
+    edge_det = np.array(edge_det)
 
-icosphere = Triangulator(Icosphere(depth=1))
-ico_graph, ico_mesh = icosphere.get_current_graph()
-print(f"Euler character: {euler_char(ico_graph, ico_mesh)}")
-icosphere.draw()
+    ico_det = []
+    for i in range(0, 3):
+        icosphere = Triangulator(Icosphere(depth=i))
+        ico_graph, ico_mesh = icosphere.get_current_graph()
+        determinant = det(M(nx.adjacency_matrix(ico_graph)))
+        ico_det.append([ico_graph.number_of_nodes(), determinant])
+    print(ico_det)
+    ico_det = np.array(ico_det)
 
-print(f"Det random sphere:{det(M(nx.adjacency_matrix(random_graph)))}")
-print(f"Det edge sphere:{det(M(nx.adjacency_matrix(edge_graph)))}")
-print(f"Det UV sphere:{det(M(nx.adjacency_matrix(uv_graph)))}")
+    uv_det = [] 
+    for i in range(3, 15):
+        for j in range(3, 15):
+            uv_sphere = Triangulator(UVSphere(count=(i,j)))
+            uv_graph, uv_mesh = uv_sphere.get_current_graph()
+            determinant = det(M(nx.adjacency_matrix(uv_graph)))
+            uv_det.append([uv_graph.number_of_nodes(), determinant, (i, j)])
+    uv_det = np.array(sorted(uv_det, key=lambda x: x[0]))
+    
+    random_det = []
+    for i in range(1,300):
+        random_tri = Triangulator(Octahedron())
+        random_graph, random_mesh = random_tri.generate_random_triangluation(i)
+        determinant = det(M(nx.adjacency_matrix(random_graph)))
+        random_det.append([random_graph.number_of_nodes(), determinant])
+    random_det = np.array(random_det)
+        
+    plt.plot(edge_det[:,0], abs(edge_det[:,1]), label="Octahedron: edge")
+    plt.plot(uv_det[:,0], abs(uv_det[:,1]), label="UV Sphere")
+    plt.plot(random_det[:,0], abs(random_det[:,1]), label="Octahedron: random centroid")
+    plt.plot(ico_det[:,0], abs(ico_det[:,1]), label="Icosphere")
+    plt.legend(fontsize="small")
+    plt.yscale('log')
+    plt.show()
 
-# Stragegy: 
-# Make graphs of det vs N for all three types on triangulation and try to compare 
-plt.show()
+
+    # random_tri.draw()
+    # edge_tri.draw()
+    # uv_sphere.draw()
+    # icosphere.draw()
+    # plt.show()
+
+if __name__ == "__main__":
+    main()
