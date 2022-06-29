@@ -1,5 +1,6 @@
 import networkx as nx
 import numpy as np
+import matplotlib as mpl
 import matplotlib.pyplot as plt
 import matplotlib.tri as mtri
 from collections import namedtuple
@@ -46,7 +47,7 @@ class Triangulator:
         graph.add_edges_from(mesh.edges)
         return graph, mesh
     
-    def draw(self):
+    def draw(self, label=""):
         X = []
         Y = []
         Z = []
@@ -67,7 +68,9 @@ class Triangulator:
         T = mtri.Triangulation(X, Y, np.array(T))
         fig = plt.figure()
         ax  = fig.add_subplot(111, projection='3d')
-        ax.plot_trisurf(T, Z, lw=0.2, edgecolor="black", color="grey", alpha=1, cmap='YlGnBu_r')
+        fake2Dline = mpl.lines.Line2D([0],[0], linestyle="none", c='b', marker = 'o')
+        ax.legend([fake2Dline], [label], numpoints = 1)
+        ax.plot_trisurf(T, Z, lw=0.2, edgecolor="black", color="grey", alpha=1, cmap='YlGnBu_r', label=label)
         plt.axis('off')
 
     def get_index_from_point(self, point):
